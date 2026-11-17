@@ -68,6 +68,11 @@ def _create_ticket(args: dict) -> str:
     return f"Created {ticket['id']}"
 
 
+def _list_open_tickets(args: dict) -> str:
+    open_ones = [f"{tid}: {t['title']}" for tid, t in TICKETS.items() if t["status"] == "open"]
+    return "\n".join(open_ones) or "No open tickets."
+
+
 def build_tools() -> dict[str, Tool]:
     obj = lambda props, req: {"type": "object", "properties": props, "required": req}
     tools = [
@@ -105,6 +110,14 @@ def build_tools() -> dict[str, Tool]:
             _create_ticket,
             True,
             ("title",),
+        ),
+        Tool(
+            "list_open_tickets",
+            "List all open tickets (read-only).",
+            obj({}, []),
+            _list_open_tickets,
+            False,
+            (),
         ),
     ]
     return {t.name: t for t in tools}

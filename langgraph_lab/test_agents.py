@@ -111,6 +111,12 @@ def test_plain_same_thread_keeps_the_conversation():
     assert len(agent_plain.THREADS["t"]) == 4  # user, assistant, user, assistant
 
 
+def test_plain_list_open_tickets_needs_no_approval():
+    model = ScriptedChat([tool_call("list_open_tickets", {}), final_answer("One open.")])
+    result = run_agent("What is open?", model, approve=lambda p: False)
+    assert result.audit == ["list_open_tickets: ran with {}"]
+
+
 # ----------------------------------------------------------------------------- LangGraph version
 def test_graph_read_only_tool_then_answer():
     model = ScriptedChat(
@@ -158,3 +164,10 @@ def test_graph_resume_with_no_blocks_the_side_effect():
     assert out["status"] == "done"
     assert tools.CREATED_TICKETS == []
     assert "denied by human" in out["audit"][0]
+
+
+def test_graph_list_open_tickets_runs_without_pause():
+    model = ScriptedChat([tool_call("list_open_tickets", {}), final_answer("One open.")])
+    out = start(build_graph(model), "What is open?", "t6")
+    assert out["status"] == "done"
+    assert "ran with" in out["audit"][0]
